@@ -87,7 +87,7 @@
       background: none;
     }
 
-    /* Navigation Bar */
+    /* Navigation Bar (hidden on landing page, reveals on The Core Line) */
     .top-nav {
       position: fixed;
       top: 0;
@@ -99,6 +99,16 @@
       justify-content: space-between;
       align-items: center;
       pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-100%);
+      transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.4s;
+    }
+
+    .top-nav.is-visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
     }
 
     .nav-glass {
@@ -282,11 +292,11 @@
       align-items: center;
       justify-content: center;
       font-family: var(--font-display);
-      font-size: clamp(56px, 17vw, 280px);
+      font-size: clamp(38px, 11vw, 170px);
       font-weight: 800;
-      letter-spacing: -0.04em;
+      letter-spacing: -0.035em;
       line-height: 0.85;
-      -webkit-text-stroke: 3px var(--color-bag-maroon);
+      -webkit-text-stroke: 2.2px var(--color-bag-maroon);
       paint-order: stroke fill;
       will-change: transform;
     }
@@ -1048,7 +1058,7 @@
   <!-- Top Navigation -->
   <header class="top-nav">
     <div class="nav-glass"></div>
-    <a href="#" class="nav-brand" aria-label="Wearhouse Home">
+    <a href="#hero" class="nav-brand" aria-label="Wearhouse Home">
       <span class="brand-dot"></span>
       <span>WEARHOUSE</span>
     </a>
@@ -1496,6 +1506,25 @@
           }
         });
       }
+
+      // Navigation Bar Visibility: Hidden on landing page (hero), appears on The Core Line (#basics)
+      const topNav = document.querySelector('.top-nav');
+      const basicsSection = document.getElementById('basics');
+
+      function updateNavVisibility() {
+        if (!topNav || !basicsSection) return;
+        const rect = basicsSection.getBoundingClientRect();
+        // Reveal navbar once the top of The Core Line section is near/above the viewport top (80px buffer)
+        if (rect.top <= 80) {
+          topNav.classList.add('is-visible');
+        } else {
+          topNav.classList.remove('is-visible');
+        }
+      }
+
+      window.addEventListener('scroll', updateNavVisibility, { passive: true });
+      window.addEventListener('resize', updateNavVisibility, { passive: true });
+      updateNavVisibility();
 
       // ==========================================
       // GSAP ANIMATIONS (Respects prefers-reduced-motion)
