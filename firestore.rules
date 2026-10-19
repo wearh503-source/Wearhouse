@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Check if the authenticated user is the store admin
+    function isAdmin() {
+      return request.auth != null && 
+             request.auth.token.email.lower() == 'wearh503@gmail.com';
+    }
+
+    // Products & Size subcollection
+    // Public read for customer browsing; write restricted to Admin
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+
+      match /sizes/{sizeId} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+    }
+
+    // Orders Collection
+    // - Clients (browsers) CANNOT create, update or delete orders directly.
+    // - Only Cloud Functions (Firebase Admin SDK) can create orders and verify payments.
+    // - Customers can fetch/listen to their specific order using the unguessable 32-character ID.
+    // - Admin can query all orders and can update status to 'shipped' or 'delivered'.
+    match /orders/{orderId} {
+      // Direct document get allowed (for customer live tracking with unguessable order ID)
+      allow get: if true;
+      
+      // Querying/listing all orders allowed only for store admin
+      allow list: if isAdmin();
+
+      // No client can create or delete orders
+      allow create, delete: if false;
+
+      // Admin can update ONLY the status field to 'shipped' or 'delivered'
+      allow update: if isAdmin() && 
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'shipped_at', 'delivered_at']) &&
+                       request.resource.data.status in ['shipped', 'delivered'];
+    }
+
+    // Default deny for anything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

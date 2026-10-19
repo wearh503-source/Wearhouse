@@ -1,0 +1,75 @@
+{
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log"
+      ]
+    }
+  ],
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "hosting": {
+    "public": ".",
+    "cleanUrls": true,
+    "ignore": [
+      "firebase.json",
+      ".firebaserc",
+      "firestore.rules",
+      "firestore.indexes.json",
+      "functions/**",
+      "scripts/**",
+      "**/.*",
+      "**/node_modules/**",
+      "server.js"
+    ],
+    "rewrites": [
+      {
+        "source": "/api/**",
+        "function": "api"
+      },
+      {
+        "source": "/core/tees",
+        "destination": "/category.html"
+      },
+      {
+        "source": "/core/pants",
+        "destination": "/category.html"
+      },
+      {
+        "source": "/product",
+        "destination": "/product.html"
+      },
+      {
+        "source": "/product/**",
+        "destination": "/product.html"
+      },
+      {
+        "source": "/checkout",
+        "destination": "/checkout.html"
+      },
+      {
+        "source": "/order",
+        "destination": "/order.html"
+      },
+      {
+        "source": "/admin",
+        "destination": "/admin.html"
+      },
+      {
+        "source": "/policies",
+        "destination": "/policies.html"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

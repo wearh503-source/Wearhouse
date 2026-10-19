@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="beige">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Wearhouse — Store Admin</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Firebase SDK ESM Import Map -->
+  <script type="importmap">
+    {
+      "imports": {
+        "firebase/app": "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js",
+        "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js",
+        "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="/store.css">
+
+  <style>
+    .admin-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--card-radius-sm);
+      padding: clamp(24px, 4vw, 40px);
+      max-width: 480px;
+      margin: 40px auto;
+    }
+
+    .dashboard-view {
+      display: none;
+      width: 100%;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .stat-number {
+      font-family: var(--font-display);
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--color-cami-green);
+    }
+
+    .orders-table-wrapper {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      overflow-x: auto;
+    }
+
+    .orders-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 14px;
+      min-width: 800px;
+    }
+
+    .orders-table th, .orders-table td {
+      padding: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      vertical-align: top;
+    }
+
+    .orders-table th {
+      background: rgba(0, 0, 0, 0.2);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      opacity: 0.7;
+    }
+
+    .action-btn {
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      margin-right: 6px;
+      margin-bottom: 4px;
+      transition: opacity 0.2s;
+    }
+
+    .action-btn:hover { opacity: 0.85; }
+    .action-btn--ship { background: #64c8ff; color: #002233; }
+    .action-btn--deliver { background: #64ff96; color: #003311; }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="store-header">
+    <div class="store-brand">
+      <a href="/" class="store-brand-title">WEARHOUSE ADMIN</a>
+    </div>
+    <div class="store-nav-links">
+      <a href="/core" class="nav-link">Store Front</a>
+      <span id="admin-user-display" style="font-size: 13px; color: var(--color-cami-green); font-weight: 600;"></span>
+      <button id="logout-btn" style="display: none; font-size: 13px; color: rgba(255,255,255,0.7); text-decoration: underline;">Logout</button>
+    </div>
+  </header>
+
+  <main class="store-container">
+    <!-- Login View -->
+    <div id="login-view">
+      <div class="admin-card">
+        <h2 style="font-family: var(--font-display); font-size: 28px; margin-bottom: 8px;">Admin Sign In</h2>
+        <p style="font-size: 14px; opacity: 0.7; margin-bottom: 24px;">Restricted to Wearhouse store manager (wearh503@gmail.com).</p>
+
+        <div id="login-error" style="background: rgba(255, 80, 80, 0.15); border: 1px solid #ff5050; color: #ff9aa2; padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; display: none;"></div>
+
+        <!-- Google Sign-In Button -->
+        <button type="button" id="google-login-btn" class="google-auth-btn" style="width: 100%; height: 50px; border-radius: 12px; background: #ffffff; color: #1f1f1f; font-weight: 700; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+          <svg width="20" height="20" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          <span>Sign in with Google</span>
+        </button>
+
+        <div style="display: flex; align-items: center; gap: 12px; margin: 20px 0; color: rgba(255,255,255,0.4); font-size: 12px; text-transform: uppercase;">
+          <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.15);"></div>
+          <span>or email sign in</span>
+          <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.15);"></div>
+        </div>
+
+        <form id="admin-login-form">
+          <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;">
+            <label style="font-size: 12px; font-weight: bold; text-transform: uppercase;">Admin Email</label>
+            <input type="email" id="admin-email" value="wearh503@gmail.com" required style="height: 48px; border-radius: 10px; border: 1px solid var(--border-subtle); background: rgba(255,255,255,0.08); color: white; padding: 0 14px; font-size: 15px;" />
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 24px;">
+            <label style="font-size: 12px; font-weight: bold; text-transform: uppercase;">Password</label>
+            <input type="password" id="admin-password" placeholder="••••••••" required style="height: 48px; border-radius: 10px; border: 1px solid var(--border-subtle); background: rgba(255,255,255,0.08); color: white; padding: 0 14px; font-size: 15px;" />
+          </div>
+
+          <button type="submit" style="width: 100%; height: 50px; background: var(--color-cami-green); color: var(--color-bag-maroon); font-weight: 800; border-radius: 12px; font-size: 16px;">
+            Sign In &rarr;
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Dashboard View -->
+    <div id="dashboard-view" class="dashboard-view">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <h1 style="font-family: var(--font-display); font-size: clamp(32px, 6vw, 48px); letter-spacing: -0.03em;">Orders Dashboard</h1>
+          <p style="opacity: 0.7; font-size: 14px;">Real-time management for paid orders and logistics dispatch.</p>
+        </div>
+        <button id="refresh-orders-btn" style="background: rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: bold;">
+          ↻ Refresh Orders
+        </button>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <span style="font-size: 13px; opacity: 0.7; text-transform: uppercase;">Total Orders</span>
+          <span class="stat-number" id="stat-total">0</span>
+        </div>
+        <div class="stat-card">
+          <span style="font-size: 13px; opacity: 0.7; text-transform: uppercase;">Paid (Awaiting Dispatch)</span>
+          <span class="stat-number" id="stat-paid" style="color: #ffd700;">0</span>
+        </div>
+        <div class="stat-card">
+          <span style="font-size: 13px; opacity: 0.7; text-transform: uppercase;">Shipped</span>
+          <span class="stat-number" id="stat-shipped" style="color: #64c8ff;">0</span>
+        </div>
+        <div class="stat-card">
+          <span style="font-size: 13px; opacity: 0.7; text-transform: uppercase;">Delivered</span>
+          <span class="stat-number" id="stat-delivered" style="color: #64ff96;">0</span>
+        </div>
+      </div>
+
+      <!-- Orders Table -->
+      <div class="orders-table-wrapper">
+        <table class="orders-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer & Shipping</th>
+              <th>Items & Sizes</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="orders-tbody">
+            <tr><td colspan="6" style="text-align: center; padding: 32px; opacity: 0.6;">Loading orders...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "firebase/app";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+    import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp } from "firebase/firestore";
+
+    const firebaseConfig = {
+      projectId: "wear-house-6d810",
+      appId: "1:52294491181:web:2fa3b1d59694a5540b2ca4",
+      storageBucket: "wear-house-6d810.firebasestorage.app",
+      apiKey: "AIzaSyDaCBap5iVKrF6APAZy81m2X1IieTgB-cM",
+      authDomain: "wear-house-6d810.firebaseapp.com",
+      messagingSenderId: "52294491181"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const ALLOWED_ADMIN = "wearh503@gmail.com";
+    const googleProvider = new GoogleAuthProvider();
+
+    const loginView = document.getElementById("login-view");
+    const dashboardView = document.getElementById("dashboard-view");
+    const userDisplay = document.getElementById("admin-user-display");
+    const logoutBtn = document.getElementById("logout-btn");
+    const loginError = document.getElementById("login-error");
+    const ordersTbody = document.getElementById("orders-tbody");
+
+    // Google Sign-In Handler
+    const googleLoginBtn = document.getElementById("google-login-btn");
+    if (googleLoginBtn) {
+      googleLoginBtn.addEventListener("click", async () => {
+        loginError.style.display = "none";
+        try {
+          const result = await signInWithPopup(auth, googleProvider);
+          if (result.user.email.toLowerCase() !== ALLOWED_ADMIN.toLowerCase()) {
+            await signOut(auth);
+            throw new Error(`Access Denied: ${result.user.email} is not authorized. Store admin email is ${ALLOWED_ADMIN}.`);
+          }
+        } catch (err) {
+          console.error("Google sign in error:", err);
+          loginError.textContent = err.message || "Failed to sign in with Google.";
+          loginError.style.display = "block";
+        }
+      });
+    }
+
+    // Password Login Form
+    document.getElementById("admin-login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      loginError.style.display = "none";
+      const email = document.getElementById("admin-email").value.trim();
+      const password = document.getElementById("admin-password").value;
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (err) {
+        loginError.textContent = err.message || "Failed to sign in. Verify admin credentials.";
+        loginError.style.display = "block";
+      }
+    });
+
+    // Logout
+    logoutBtn.addEventListener("click", () => signOut(auth));
+
+    // Auth State Observer
+    onAuthStateChanged(auth, (user) => {
+      if (user && user.email.toLowerCase() === ALLOWED_ADMIN.toLowerCase()) {
+        loginView.style.display = "none";
+        dashboardView.style.display = "block";
+        userDisplay.textContent = user.email;
+        logoutBtn.style.display = "inline-block";
+        subscribeOrders();
+      } else {
+        loginView.style.display = "block";
+        dashboardView.style.display = "none";
+        userDisplay.textContent = "";
+        logoutBtn.style.display = "none";
+      }
+    });
+
+    // Orders Real-time Subscription
+    let unsubscribe = null;
+    function subscribeOrders() {
+      if (unsubscribe) unsubscribe();
+
+      const q = query(collection(db, "orders"), orderBy("created_at", "desc"));
+      unsubscribe = onSnapshot(q, (snapshot) => {
+        const orders = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderDashboard(orders);
+      }, (err) => {
+        console.warn("Orders live query note (check rules):", err);
+      });
+    }
+
+    document.getElementById("refresh-orders-btn").addEventListener("click", () => subscribeOrders());
+
+    function renderDashboard(orders) {
+      // Stats
+      document.getElementById("stat-total").textContent = orders.length;
+      document.getElementById("stat-paid").textContent = orders.filter(o => o.status === "paid").length;
+      document.getElementById("stat-shipped").textContent = orders.filter(o => o.status === "shipped").length;
+      document.getElementById("stat-delivered").textContent = orders.filter(o => o.status === "delivered").length;
+
+      if (orders.length === 0) {
+        ordersTbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 32px; opacity: 0.6;">No customer orders placed yet.</td></tr>`;
+        return;
+      }
+
+      ordersTbody.innerHTML = orders.map(order => {
+        const itemsText = (order.items || []).map(i => `${i.name} (${i.size} × ${i.qty})`).join("<br>");
+        const addressText = order.customer ? `
+          <strong>${order.customer.name}</strong><br>
+          ${order.customer.phone} | ${order.customer.email}<br>
+          <span style="opacity: 0.8; font-size: 13px;">${order.customer.address}, ${order.customer.city}, ${order.customer.state} - ${order.customer.pincode}</span>
+        ` : 'N/A';
+
+        const totalFormatted = `₹${((order.total_paise || 0) / 100).toLocaleString("en-IN")}`;
+        const status = order.status || "created";
+
+        return `
+          <tr>
+            <td>
+              <strong>${order.order_id || order.id}</strong><br>
+              <span style="font-size: 11px; opacity: 0.5;">Rzp: ${order.razorpay_payment_id || order.razorpay_order_id || 'N/A'}</span>
+            </td>
+            <td>${addressText}</td>
+            <td style="font-size: 13px;">${itemsText}</td>
+            <td style="font-weight: 700; color: var(--color-cami-green);">${totalFormatted}</td>
+            <td>
+              <span class="status-pill status-pill--${status}" style="font-size: 11px; padding: 4px 10px;">
+                ${status}
+              </span>
+            </td>
+            <td>
+              ${status === 'paid' ? `
+                <button class="action-btn action-btn--ship" onclick="window.updateOrderStatus('${order.id}', 'shipped')">
+                  Mark Shipped
+                </button>
+              ` : ''}
+              ${status === 'shipped' ? `
+                <button class="action-btn action-btn--deliver" onclick="window.updateOrderStatus('${order.id}', 'delivered')">
+                  Mark Delivered
+                </button>
+              ` : ''}
+              ${['delivered', 'failed'].includes(status) ? `<span style="opacity: 0.5; font-size: 12px;">Completed</span>` : ''}
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      window.updateOrderStatus = async (orderId, newStatus) => {
+        try {
+          const user = auth.currentUser;
+          if (!user) throw new Error("Please sign in first");
+
+          // Try updating directly via Admin Firestore rule
+          await updateDoc(doc(db, "orders", orderId), {
+            status: newStatus,
+            [`${newStatus}_at`]: serverTimestamp()
+          });
+        } catch (err) {
+          console.error("Direct update error, trying Cloud Functions endpoint:", err);
+          // Fallback to Cloud Function /api/admin/orders/status
+          const token = await auth.currentUser.getIdToken();
+          const res = await fetch("/api/admin/orders/status", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ orderId, status: newStatus })
+          });
+          if (!res.ok) {
+            const data = await res.json();
+            alert("Error updating order: " + (data.error || "Permission denied"));
+          }
+        }
+      };
+    }
+  </script>
+</body>
+</html>

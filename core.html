@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Wearhouse — Core Line</title>
+  <meta name="description" content="Wearhouse Core line basics: Tees and Pants in signature silhouettes.">
+
+  <!-- Font: Bricolage Grotesque, weight 800 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&display=swap" rel="stylesheet">
+
+  <!-- GSAP 3.12.5 from cdnjs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+  <style>
+    /* CSS Reset & Variables */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --color-maroon-bg: #6b1030;
+      --color-cream: #fdfcf8;
+      --color-cami-green: #e5faab;
+      --color-bag-maroon: #6c0321;
+      --font-display: 'Bricolage Grotesque', system-ui, -apple-system, sans-serif;
+    }
+
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+      min-height: 100dvh;
+      background-color: var(--color-maroon-bg);
+      color: var(--color-cream);
+      font-family: var(--font-display);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    /* Page Container with Safe-Area Inset Handling */
+    .page-wrapper {
+      width: 100%;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding-top: max(clamp(20px, 4vh, 48px), env(safe-area-inset-top));
+      padding-bottom: max(clamp(20px, 4vh, 48px), env(safe-area-inset-bottom));
+      padding-left: max(clamp(16px, 4vw, 48px), env(safe-area-inset-left));
+      padding-right: max(clamp(16px, 4vw, 48px), env(safe-area-inset-right));
+    }
+
+    .main-content {
+      width: 100%;
+      max-width: 1140px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: clamp(16px, 3vh, 32px);
+    }
+
+    /* Title: single word BASICS with mask */
+    .title-wrapper {
+      width: 100%;
+    }
+
+    .title-mask {
+      display: inline-block;
+      overflow: hidden;
+      vertical-align: bottom;
+    }
+
+    .title-word {
+      display: block;
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: clamp(56px, 13vw, 210px);
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      color: var(--color-cream);
+      will-change: transform;
+    }
+
+    /* Cards Grid Section */
+    .cards-section {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: clamp(14px, 2vw, 24px);
+    }
+
+    /* Curved Square Card */
+    .card {
+      aspect-ratio: 1 / 1;
+      width: 100%;
+      border-radius: clamp(32px, 6vw, 80px);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-start;
+      padding: clamp(24px, 5vw, 64px);
+      user-select: none;
+      cursor: pointer;
+      position: relative;
+      will-change: transform, opacity;
+      transform-origin: center center;
+    }
+
+    /* Card 1: Tees */
+    .card--tees {
+      background-color: var(--color-cami-green);
+      color: var(--color-bag-maroon);
+    }
+
+    /* Card 2: Pants */
+    .card--pants {
+      background-color: var(--color-cream);
+      color: var(--color-bag-maroon);
+    }
+
+    /* Card Label Bottom-Left */
+    .card-label {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: clamp(52px, 8vw, 132px);
+      line-height: 0.9;
+      letter-spacing: -0.04em;
+      display: block;
+      pointer-events: none;
+    }
+
+    /* Responsive: Stack cards on mobile */
+    @media (max-width: 680px) {
+      .page-wrapper {
+        justify-content: flex-start;
+      }
+
+      .cards-section {
+        grid-template-columns: 1fr;
+      }
+    }
+  <link rel="stylesheet" href="/store.css">
+  <script src="/cart.js" defer></script>
+</head>
+<body>
+  <!-- Minimal Brand Header with Bag -->
+  <header class="store-header">
+    <div class="store-brand">
+      <a href="/" class="store-brand-title">WEARHOUSE</a>
+    </div>
+    <div class="store-nav-links">
+      <a href="/core" class="nav-link active">Core line</a>
+      <a href="/admin" class="nav-link">Admin</a>
+      <button class="cart-btn-trigger" onclick="WearhouseCart.open()" aria-label="Open Shopping Bag">
+        <span>Bag</span>
+        <span class="cart-badge">0</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="page-wrapper">
+    <div class="main-content">
+      <!-- Title: BASICS with aria-label -->
+      <header class="title-wrapper" aria-label="Wearhouse Core line: BASICS">
+        <div class="title-mask">
+          <h1 class="title-word">BASICS</h1>
+        </div>
+      </header>
+
+      <!-- Two Cards: Tees and Pants -->
+      <section class="cards-section" aria-label="Core line categories">
+        <!-- Card 1: Tees -->
+        <a href="/core/tees" class="card card--tees" id="card-tees" aria-label="Tees category">
+          <span class="card-label">Tees</span>
+        </a>
+
+        <!-- Card 2: Pants -->
+        <a href="/core/pants" class="card card--pants" id="card-pants" aria-label="Pants category">
+          <span class="card-label">Pants</span>
+        </a>
+      </section>
+    </div>
+  </main>
+
+  <!-- Store Policy Footer -->
+  <footer class="store-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/policies#terms">Terms of Service</a>
+        <a href="/policies#privacy">Privacy Policy</a>
+        <a href="/policies#refunds">Refund & Cancellation</a>
+        <a href="/policies#shipping">Shipping Policy</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 WEARHOUSE CO. All online orders processed securely via Razorpay.
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Respect prefers-reduced-motion
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReducedMotion || typeof gsap === 'undefined') {
+        return; // Content is already visible by default
+      }
+
+      const titleWord = document.querySelector('.title-word');
+      const cardTees = document.getElementById('card-tees');
+      const cardPants = document.getElementById('card-pants');
+
+      // 1. Title rises word by word out of a mask (yPercent 115 to 0, 1s, power4.out, stagger 0.09s)
+      gsap.fromTo(titleWord,
+        { yPercent: 115 },
+        { 
+          yPercent: 0, 
+          duration: 1, 
+          ease: 'power4.out', 
+          stagger: 0.09 
+        }
+      );
+
+      // 2. Cards slide up from below the page, tilting slightly:
+      // left card -5 degrees, right card 5 degrees, back to 0, fading in, 1.4s power4.out, stagger 0.16s, delay 0.35s
+      const windowHeight = window.innerHeight || 800;
+
+      gsap.fromTo(cardTees,
+        { 
+          y: windowHeight * 0.7, 
+          rotation: -5, 
+          opacity: 0 
+        },
+        { 
+          y: 0, 
+          rotation: 0, 
+          opacity: 1, 
+          duration: 1.4, 
+          ease: 'power4.out', 
+          delay: 0.35 
+        }
+      );
+
+      gsap.fromTo(cardPants,
+        { 
+          y: windowHeight * 0.7, 
+          rotation: 5, 
+          opacity: 0 
+        },
+        { 
+          y: 0, 
+          rotation: 0, 
+          opacity: 1, 
+          duration: 1.4, 
+          ease: 'power4.out', 
+          delay: 0.35 + 0.16 
+        }
+      );
+
+      // 3. Hover: card lifts 10px and tilts 1.5 degrees (alternate direction per card), 0.4s power3.out. Settles back on leave.
+      const hoverConfigs = [
+        { el: cardTees, tilt: -1.5 },
+        { el: cardPants, tilt: 1.5 }
+      ];
+
+      hoverConfigs.forEach(({ el, tilt }) => {
+        if (!el) return;
+
+        el.addEventListener('mouseenter', () => {
+          gsap.to(el, {
+            y: -10,
+            rotation: tilt,
+            duration: 0.4,
+            ease: 'power3.out',
+            overwrite: 'auto'
+          });
+        });
+
+        el.addEventListener('mouseleave', () => {
+          gsap.to(el, {
+            y: 0,
+            rotation: 0,
+            duration: 0.4,
+            ease: 'power3.out',
+            overwrite: 'auto'
+          });
+        });
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="beige">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Wearhouse — Store Policies</title>
+  <meta name="description" content="Wearhouse terms of service, privacy policy, refund & cancellation policy, and shipping terms.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/store.css">
+  <script src="/cart.js" defer></script>
+
+  <style>
+    .policy-section {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--card-radius-sm);
+      padding: clamp(24px, 4vw, 40px);
+      margin-bottom: 24px;
+      scroll-margin-top: 100px;
+    }
+
+    .policy-title {
+      font-family: var(--font-display);
+      font-size: clamp(24px, 3.5vw, 36px);
+      font-weight: 800;
+      color: var(--color-cami-green);
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .policy-body {
+      font-size: 15px;
+      line-height: 1.7;
+      color: rgba(253, 252, 248, 0.85);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .policy-body strong {
+      color: var(--color-cream);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="store-header">
+    <div class="store-brand">
+      <a href="/" class="store-brand-title">WEARHOUSE</a>
+    </div>
+    <div class="store-nav-links">
+      <a href="/core" class="nav-link">Core line</a>
+      <button class="cart-btn-trigger" onclick="WearhouseCart.open()" aria-label="Open Shopping Bag">
+        <span>Bag</span>
+        <span class="cart-badge">0</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="store-container">
+    <header class="page-title-mask">
+      <h1 class="page-title">POLICIES</h1>
+    </header>
+
+    <!-- 1. Terms of Service -->
+    <section class="policy-section" id="terms">
+      <h2 class="policy-title">1. Terms of Service</h2>
+      <div class="policy-body">
+        <p>Welcome to <strong>Wearhouse Co.</strong> By accessing our website, purchasing our Core line basics, or participating in our exclusive limited-edition drops, you agree to be bound by these Terms of Service.</p>
+        <p><strong>Online Payments Only:</strong> All orders must be paid in full at the time of purchase using our integrated Razorpay payment gateway (supporting UPI, Credit/Debit Cards, Netbanking, and Wallets). Wearhouse does not offer Cash on Delivery (COD).</p>
+        <p><strong>Pricing & Availability:</strong> All prices are in Indian Rupees (INR) inclusive of applicable goods and services taxes. Garment quantities are strictly limited and inventory is reserved on successful bank authorization.</p>
+      </div>
+    </section>
+
+    <!-- 2. Privacy Policy -->
+    <section class="policy-section" id="privacy">
+      <h2 class="policy-title">2. Privacy Policy</h2>
+      <div class="policy-body">
+        <p>Your privacy is paramount. Wearhouse collects customer names, delivery addresses, phone numbers, and email addresses solely for order processing, logistics dispatch, and drop alerts.</p>
+        <p><strong>Payment Security:</strong> Wearhouse never stores or handles your debit/credit card numbers or UPI PINs. All financial transactions are securely handled through PCI-DSS compliant Razorpay servers.</p>
+        <p><strong>Data Retention:</strong> Order records are preserved in our encrypted Google Cloud Firestore database to ensure accurate fulfillment and consumer dispute protection.</p>
+      </div>
+    </section>
+
+    <!-- 3. Refund & Cancellation Policy -->
+    <section class="policy-section" id="refunds">
+      <h2 class="policy-title">3. Refund & Cancellation Policy</h2>
+      <div class="policy-body">
+        <p><strong>Cancellations:</strong> You may request an order cancellation before your parcel is marked as <em>Shipped</em>. To cancel an order, email <strong>wearh503@gmail.com</strong> with your Order ID.</p>
+        <p><strong>Returns & Damaged Goods:</strong> Because our pieces are custom-crafted basics and limited-edition drops, we accept returns within <strong>7 days</strong> of delivery only for manufacturing defects or shipping damages.</p>
+        <p><strong>Refund Execution:</strong> Approved refunds are credited directly to the customer's original payment method via the Razorpay payment dashboard within 5 to 7 working days.</p>
+      </div>
+    </section>
+
+    <!-- 4. Shipping Policy -->
+    <section class="policy-section" id="shipping">
+      <h2 class="policy-title">4. Shipping Policy</h2>
+      <div class="policy-body">
+        <p><strong>Coverage:</strong> We provide insured pan-India shipping across all serviceable postal pincodes.</p>
+        <p><strong>Processing & Delivery Times:</strong> Core line basics are dispatched within 24 to 48 hours of payment confirmation. Metro deliveries typically arrive within 2 to 4 business days, while non-metro locations take 4 to 6 business days.</p>
+        <p><strong>Tracking:</strong> Upon dispatch, a status update is reflected in real-time on your live order tracking link (`/order?id=...`).</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Store Policy Footer -->
+  <footer class="store-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="#terms">Terms of Service</a>
+        <a href="#privacy">Privacy Policy</a>
+        <a href="#refunds">Refund & Cancellation</a>
+        <a href="#shipping">Shipping Policy</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 WEARHOUSE CO. All online orders processed securely via Razorpay.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

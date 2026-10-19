@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="beige">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Wearhouse — Product</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- GSAP 3.12.5 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+  <!-- Firebase SDK ESM Import Map -->
+  <script type="importmap">
+    {
+      "imports": {
+        "firebase/app": "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js",
+        "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="/store.css">
+  <script src="/cart.js" defer></script>
+
+  <style>
+    .product-layout {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: clamp(24px, 5vw, 64px);
+      margin-top: 24px;
+    }
+
+    @media (max-width: 860px) {
+      .product-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Gallery */
+    .gallery-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .main-image-frame {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: var(--card-radius);
+      overflow: hidden;
+      background-color: var(--bg-card);
+      box-shadow: var(--card-shadow);
+      border: 1px solid var(--border-color);
+    }
+
+    .main-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.4s ease;
+    }
+
+    .thumbnails-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .thumb-btn {
+      width: 72px;
+      height: 72px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 2px solid transparent;
+      opacity: 0.6;
+      transition: opacity 0.2s, border-color 0.2s;
+    }
+
+    .thumb-btn.active, .thumb-btn:hover {
+      opacity: 1;
+      border-color: #6b1030;
+    }
+
+    .thumb-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Product Details */
+    .product-info-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .product-title {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: clamp(36px, 5vw, 64px);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      color: var(--text-main);
+    }
+
+    .product-price {
+      font-size: clamp(24px, 3vw, 32px);
+      font-weight: 700;
+      color: var(--accent-price);
+    }
+
+    .product-desc {
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--text-muted);
+      max-width: 520px;
+    }
+
+    /* Size Selector */
+    .size-selector-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .size-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .size-options-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .size-btn {
+      min-width: 64px;
+      height: 52px;
+      padding: 0 16px;
+      border-radius: 14px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-main);
+      font-weight: 800;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .size-btn:hover:not(:disabled) {
+      background: var(--bg-card-hover);
+      border-color: #6b1030;
+    }
+
+    .size-btn.selected {
+      background: #6b1030;
+      color: #fdfcf8;
+      border-color: #6b1030;
+    }
+
+    .size-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+
+    .size-btn:disabled::after {
+      content: "Sold out";
+      position: absolute;
+      bottom: -18px;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+      color: #e03131;
+    }
+
+    /* Quantity & Add to Cart */
+    .purchase-actions {
+      display: flex;
+      gap: 16px;
+      margin-top: 16px;
+      align-items: center;
+    }
+
+    .qty-control-box {
+      display: flex;
+      align-items: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      height: 56px;
+      padding: 0 8px;
+    }
+
+    .qty-btn-lg {
+      width: 40px;
+      height: 40px;
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+
+    .qty-display {
+      min-width: 32px;
+      text-align: center;
+      font-weight: 800;
+      font-size: 16px;
+      color: var(--text-main);
+    }
+
+    .add-to-cart-btn {
+      flex: 1;
+      height: 56px;
+      border-radius: 16px;
+      background-color: var(--accent-cta);
+      color: var(--accent-cta-text);
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+      transition: transform 0.2s var(--ease-out-expo), filter 0.2s ease;
+    }
+
+    .add-to-cart-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      filter: brightness(1.08);
+    }
+
+    .add-to-cart-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .trust-badges {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-color);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="store-header">
+    <div class="store-brand">
+      <a href="/" class="store-brand-title">WEARHOUSE</a>
+    </div>
+    <div class="store-nav-links">
+      <a href="/core" class="nav-link">Core line</a>
+      <a href="/core/tees" class="nav-link">Tees</a>
+      <a href="/core/pants" class="nav-link">Pants</a>
+      <button class="cart-btn-trigger" onclick="WearhouseCart.open()" aria-label="Open Shopping Bag">
+        <span>Bag</span>
+        <span class="cart-badge">0</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="store-container">
+    <div style="margin-bottom: 24px;">
+      <a href="/core" style="font-size: 14px; opacity: 0.7; text-decoration: underline;">&larr; Back to Core line</a>
+    </div>
+
+    <div class="product-layout" id="product-layout">
+      <!-- Gallery Column -->
+      <div class="gallery-container">
+        <div class="main-image-frame">
+          <img id="main-product-img" src="" alt="Product image" class="main-image" />
+        </div>
+        <div class="thumbnails-row" id="thumbnails-row"></div>
+      </div>
+
+      <!-- Info Column -->
+      <div class="product-info-panel">
+        <h1 class="product-title" id="prod-title">Loading...</h1>
+        <div class="product-price" id="prod-price">₹0</div>
+        <p class="product-desc" id="prod-desc">
+          Fetching garment specifications and availability...
+        </p>
+
+        <!-- Size Selection -->
+        <div class="size-selector-section">
+          <div class="size-label-row">
+            <span>Select Size</span>
+            <span id="selected-size-text" style="color: var(--color-cami-green);">Select a size</span>
+          </div>
+          <div class="size-options-grid" id="size-options-grid">
+            <!-- Dynamically populated sizes -->
+          </div>
+        </div>
+
+        <!-- Quantity & Add to Cart -->
+        <div class="purchase-actions">
+          <div class="qty-control-box">
+            <button class="qty-btn-lg" id="qty-minus" aria-label="Decrease quantity">-</button>
+            <span class="qty-display" id="qty-display">1</span>
+            <button class="qty-btn-lg" id="qty-plus" aria-label="Increase quantity">+</button>
+          </div>
+
+          <button class="add-to-cart-btn" id="add-to-cart-btn" disabled>
+            <span>Add to Bag</span>
+          </button>
+        </div>
+
+        <!-- Trust Badges -->
+        <div class="trust-badges">
+          <div>✓ Online Payment via Razorpay</div>
+          <div>✓ Fast Delivery Across India</div>
+          <div>✓ Heavyweight Pre-Shrunk Fabric</div>
+          <div>✓ Direct Drop Notification</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Store Policy Footer -->
+  <footer class="store-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/policies#terms">Terms of Service</a>
+        <a href="/policies#privacy">Privacy Policy</a>
+        <a href="/policies#refunds">Refund & Cancellation</a>
+        <a href="/policies#shipping">Shipping Policy</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 WEARHOUSE CO. All online orders processed securely via Razorpay.
+      </div>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { initializeApp } from "firebase/app";
+    import { getFirestore, doc, getDoc, collection, getDocs } from "firebase/firestore";
+
+    const firebaseConfig = {
+      projectId: "wear-house-6d810",
+      appId: "1:52294491181:web:2fa3b1d59694a5540b2ca4",
+      storageBucket: "wear-house-6d810.firebasestorage.app",
+      apiKey: "AIzaSyDaCBap5iVKrF6APAZy81m2X1IieTgB-cM",
+      authDomain: "wear-house-6d810.firebaseapp.com",
+      messagingSenderId: "52294491181"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Fallback catalog for immediate rendering
+    const SAMPLE_CATALOG = {
+      "tees-boxy-240": {
+        id: "tees-boxy-240",
+        name: "The 240 GSM Boxy Tee",
+        category: "tees",
+        price_paise: 149900,
+        description: "Custom combed heavyweight organic cotton with reinforced collar ribbing that never sags. Engineered with dropped shoulders and a boxy, architectural drape.",
+        images: [
+          "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=900&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=900&auto=format&fit=crop&q=80"
+        ],
+        sizes: { S: 15, M: 30, L: 20, XL: 6 }
+      },
+      "tees-minimalist-relaxed": {
+        id: "tees-minimalist-relaxed",
+        name: "The Relaxed Minimalist Tee",
+        category: "tees",
+        price_paise: 129900,
+        description: "Breathable drape with dropped shoulders for effortless day-to-night styling. Single chest pocket with micro-stitched bar tacks.",
+        images: [
+          "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=900&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=900&auto=format&fit=crop&q=80"
+        ],
+        sizes: { S: 8, M: 14, L: 10, XL: 0 }
+      },
+      "pants-pleated-trouser": {
+        id: "pants-pleated-trouser",
+        name: "Everyday Pleated Trouser",
+        category: "pants",
+        price_paise: 249900,
+        description: "Tailored wide-leg drape with double front pleats and concealed waistband elastic for all-day comfort. Cut from high-twist wrinkle resistant twill.",
+        images: [
+          "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=900&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=900&auto=format&fit=crop&q=80"
+        ],
+        sizes: { S: 10, M: 20, L: 15, XL: 5 }
+      },
+      "pants-heavy-twill": {
+        id: "pants-heavy-twill",
+        name: "Relaxed Heavy Twill Pant",
+        category: "pants",
+        price_paise: 229900,
+        description: "Dense 100% cotton twill cut with relaxed tapered leg and reinforced pocket bags. Deep maroon dyed for timeless wear.",
+        images: [
+          "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=900&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1552902865-b72c031ac5ea?w=900&auto=format&fit=crop&q=80"
+        ],
+        sizes: { S: 5, M: 12, L: 8, XL: 0 }
+      }
+    };
+
+    // Parse product ID from URL query or path
+    const urlParams = new URLSearchParams(window.location.search);
+    let productId = urlParams.get("id");
+    if (!productId) {
+      const match = window.location.pathname.match(/\/product\/([^/?#]+)/);
+      if (match) productId = match[1];
+    }
+    if (!productId) productId = "tees-boxy-240";
+
+    let currentProduct = null;
+    let selectedSize = null;
+    let currentQty = 1;
+
+    // Elements
+    const mainImgEl = document.getElementById("main-product-img");
+    const thumbRowEl = document.getElementById("thumbnails-row");
+    const titleEl = document.getElementById("prod-title");
+    const priceEl = document.getElementById("prod-price");
+    const descEl = document.getElementById("prod-desc");
+    const sizeGridEl = document.getElementById("size-options-grid");
+    const selectedSizeTextEl = document.getElementById("selected-size-text");
+    const addBtnEl = document.getElementById("add-to-cart-btn");
+    const qtyDisplayEl = document.getElementById("qty-display");
+
+    // Quantity Handlers
+    document.getElementById("qty-minus").addEventListener("click", () => {
+      if (currentQty > 1) {
+        currentQty--;
+        qtyDisplayEl.textContent = currentQty;
+      }
+    });
+
+    document.getElementById("qty-plus").addEventListener("click", () => {
+      if (currentQty < 10) {
+        currentQty++;
+        qtyDisplayEl.textContent = currentQty;
+      }
+    });
+
+    // Add to Bag Button
+    addBtnEl.addEventListener("click", () => {
+      if (!currentProduct || !selectedSize) return;
+
+      WearhouseCart.add({
+        productId: currentProduct.id,
+        name: currentProduct.name,
+        category: currentProduct.category,
+        size: selectedSize,
+        qty: currentQty,
+        price_paise: currentProduct.price_paise,
+        image: (currentProduct.images && currentProduct.images[0]) || ""
+      });
+
+      // Animate button feedback
+      if (typeof gsap !== 'undefined') {
+        gsap.to(addBtnEl, { scale: 0.96, duration: 0.1, yoyo: true, repeat: 1 });
+      }
+    });
+
+    // Load Product Data
+    async function loadProduct() {
+      let prodData = null;
+      let sizes = { S: 10, M: 20, L: 15, XL: 5 };
+
+      try {
+        const docRef = doc(db, "products", productId);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          prodData = { id: docSnap.id, ...docSnap.data() };
+
+          // Fetch sizes subcollection
+          const sizesSnap = await getDocs(collection(db, "products", productId, "sizes"));
+          if (!sizesSnap.empty) {
+            sizes = {};
+            sizesSnap.forEach(sDoc => {
+              sizes[sDoc.id] = sDoc.data().stock || 0;
+            });
+          }
+        }
+      } catch (err) {
+        console.warn("Firestore fetch notice, using catalog fallback:", err.message);
+      }
+
+      if (!prodData) {
+        prodData = SAMPLE_CATALOG[productId] || SAMPLE_CATALOG["tees-boxy-240"];
+        if (prodData.sizes) sizes = prodData.sizes;
+      }
+
+      currentProduct = { ...prodData, sizes };
+      renderProduct(currentProduct);
+    }
+
+    function renderProduct(prod) {
+      document.title = `Wearhouse — ${prod.name}`;
+      titleEl.textContent = prod.name;
+      priceEl.textContent = `₹${((prod.price_paise || 0) / 100).toLocaleString("en-IN")}`;
+      descEl.textContent = prod.description || "Everyday basics built to stay.";
+
+      // Gallery Images
+      const images = (prod.images && prod.images.length > 0)
+        ? prod.images
+        : ["https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=900"];
+
+      mainImgEl.src = images[0];
+      mainImgEl.alt = prod.name;
+
+      thumbRowEl.innerHTML = images.map((src, i) => `
+        <button class="thumb-btn ${i === 0 ? 'active' : ''}" onclick="window.switchImage('${src}', this)" aria-label="View photo ${i + 1}">
+          <img src="${src}" class="thumb-img" alt="" />
+        </button>
+      `).join("");
+
+      window.switchImage = (src, btn) => {
+        mainImgEl.src = src;
+        document.querySelectorAll('.thumb-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      };
+
+      // Size Buttons (S, M, L, XL)
+      const standardSizes = ["S", "M", "L", "XL"];
+      sizeGridEl.innerHTML = standardSizes.map(sizeKey => {
+        const stock = prod.sizes && prod.sizes[sizeKey] !== undefined ? prod.sizes[sizeKey] : 10;
+        const isSoldOut = stock <= 0;
+
+        return `
+          <button 
+            type="button" 
+            class="size-btn" 
+            data-size="${sizeKey}"
+            ${isSoldOut ? 'disabled' : ''}
+            onclick="window.selectSize('${sizeKey}', this)"
+          >
+            ${sizeKey}
+          </button>
+        `;
+      }).join("");
+
+      window.selectSize = (size, btn) => {
+        selectedSize = size;
+        document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedSizeTextEl.textContent = size;
+        addBtnEl.disabled = false;
+      };
+
+      // GSAP Entrance
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!prefersReducedMotion && typeof gsap !== 'undefined') {
+        gsap.from('.gallery-container', { x: -40, opacity: 0, duration: 1, ease: 'power4.out' });
+        gsap.from('.product-info-panel', { x: 40, opacity: 0, duration: 1, ease: 'power4.out', delay: 0.1 });
+      }
+    }
+
+    loadProduct();
+  </script>
+</body>
+</html>

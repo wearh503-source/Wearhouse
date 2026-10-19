@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Wearhouse — Basics</title>
+  <meta name="description" content="Explore Wearhouse Core line: everyday basics built to last.">
+
+  <!-- Google Fonts: Bricolage Grotesque & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- GSAP 3.12.5 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+  <!-- Firebase SDK ESM Import Map -->
+  <script type="importmap">
+    {
+      "imports": {
+        "firebase/app": "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js",
+        "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="/store.css">
+  <script src="/cart.js" defer></script>
+</head>
+<body>
+  <!-- Store Navigation Header -->
+  <header class="store-header">
+    <div class="store-brand">
+      <a href="/" class="store-brand-title">WEARHOUSE</a>
+    </div>
+    <div class="store-nav-links">
+      <a href="/core" class="nav-link">Core line</a>
+      <a href="/core/tees" class="nav-link" id="nav-tees">Tees</a>
+      <a href="/core/pants" class="nav-link" id="nav-pants">Pants</a>
+      <button class="cart-btn-trigger" onclick="WearhouseCart.open()" aria-label="Open Shopping Bag">
+        <span>Bag</span>
+        <span class="cart-badge">0</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="store-container">
+    <header class="page-title-mask" aria-label="Category Title">
+      <h1 class="page-title" id="category-title">BASICS</h1>
+    </header>
+    <p class="page-subtitle" id="category-desc">Curated everyday essentials. Cut from heavy combed cotton and structured twill.</p>
+
+    <!-- Products Grid -->
+    <section class="product-grid" id="product-grid" style="margin-top: 40px;" aria-label="Product listings">
+      <div style="grid-column: 1 / -1; color: rgba(253,252,248,0.6); padding: 40px 0;">
+        Loading collection...
+      </div>
+    </section>
+  </main>
+
+  <!-- Store Policy Footer -->
+  <footer class="store-footer">
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="/policies#terms">Terms of Service</a>
+        <a href="/policies#privacy">Privacy Policy</a>
+        <a href="/policies#refunds">Refund & Cancellation</a>
+        <a href="/policies#shipping">Shipping Policy</a>
+      </div>
+      <div class="footer-copy">
+        &copy; 2026 WEARHOUSE CO. All online orders processed securely via Razorpay.
+      </div>
+    </div>
+  </footer>
+
+  <!-- Firebase & Page Logic -->
+  <script type="module">
+    import { initializeApp } from "firebase/app";
+    import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
+
+    const firebaseConfig = {
+      projectId: "wear-house-6d810",
+      appId: "1:52294491181:web:2fa3b1d59694a5540b2ca4",
+      storageBucket: "wear-house-6d810.firebasestorage.app",
+      apiKey: "AIzaSyDaCBap5iVKrF6APAZy81m2X1IieTgB-cM",
+      authDomain: "wear-house-6d810.firebaseapp.com",
+      messagingSenderId: "52294491181"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Fallback sample data in case Firestore is empty before seeding
+    const FALLBACK_PRODUCTS = [
+      {
+        id: "tees-boxy-240",
+        name: "The 240 GSM Boxy Tee",
+        category: "tees",
+        price_paise: 149900,
+        image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80"
+      },
+      {
+        id: "tees-minimalist-relaxed",
+        name: "The Relaxed Minimalist Tee",
+        category: "tees",
+        price_paise: 129900,
+        image: "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=800&auto=format&fit=crop&q=80"
+      },
+      {
+        id: "pants-pleated-trouser",
+        name: "Everyday Pleated Trouser",
+        category: "pants",
+        price_paise: 249900,
+        image: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=800&auto=format&fit=crop&q=80"
+      },
+      {
+        id: "pants-heavy-twill",
+        name: "Relaxed Heavy Twill Pant",
+        category: "pants",
+        price_paise: 229900,
+        image: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=800&auto=format&fit=crop&q=80"
+      }
+    ];
+
+    // Determine category from URL (e.g. /core/tees or ?c=tees)
+    const urlParams = new URLSearchParams(window.location.search);
+    const path = window.location.pathname.toLowerCase();
+    let currentCategory = "tees";
+
+    if (path.includes("pants") || urlParams.get("c") === "pants") {
+      currentCategory = "pants";
+    }
+
+    const titleEl = document.getElementById("category-title");
+    const descEl = document.getElementById("category-desc");
+    const gridEl = document.getElementById("product-grid");
+
+    if (currentCategory === "pants") {
+      document.documentElement.setAttribute("data-theme", "beige");
+      titleEl.textContent = "PANTS";
+      descEl.textContent = "Structured pleats and relaxed twill silhouettes built for everyday wear.";
+      document.title = "Wearhouse — Pants";
+      document.getElementById("nav-pants")?.classList.add("active");
+    } else {
+      document.documentElement.setAttribute("data-theme", "neon");
+      titleEl.textContent = "TEES";
+      descEl.textContent = "Dense, heavyweight combed cotton tees that maintain form wear after wear.";
+      document.title = "Wearhouse — Tees";
+      document.getElementById("nav-tees")?.classList.add("active");
+    }
+
+    // GSAP Title Entrance Animation
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!prefersReducedMotion && typeof gsap !== 'undefined') {
+      gsap.from(titleEl, {
+        yPercent: 120,
+        duration: 1,
+        ease: 'power4.out',
+        delay: 0.1
+      });
+    }
+
+    // Fetch products
+    async function loadProducts() {
+      // 1. Render immediately for instant speed
+      const initialProducts = FALLBACK_PRODUCTS.filter(p => p.category === currentCategory);
+      renderProducts(initialProducts);
+
+      // 2. Refresh with live Firestore data if available
+      try {
+        const q = query(
+          collection(db, "products"),
+          where("category", "==", currentCategory),
+          where("active", "==", true)
+        );
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const liveProducts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          renderProducts(liveProducts);
+        }
+      } catch (e) {
+        console.warn("Firestore live query note:", e.message);
+      }
+    }
+
+    function renderProducts(products) {
+      if (products.length === 0) {
+        gridEl.innerHTML = `<p style="grid-column: 1 / -1; color: rgba(253,252,248,0.7);">No products currently available in this category.</p>`;
+        return;
+      }
+
+      gridEl.innerHTML = products.map((prod) => {
+        const imgUrl = (prod.images && prod.images[0]) || prod.image || "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800";
+        const priceFormatted = `₹${((prod.price_paise || 0) / 100).toLocaleString("en-IN")}`;
+
+        return `
+          <a href="/product?id=${prod.id}" class="product-card" aria-label="${prod.name} - ${priceFormatted}">
+            <img src="${imgUrl}" alt="${prod.name}" class="product-card-bg" loading="lazy" />
+            <div class="product-card-gradient"></div>
+            <div class="product-card-info">
+              <span class="product-card-name">${prod.name}</span>
+              <span class="product-card-price">${priceFormatted}</span>
+            </div>
+          </a>
+        `;
+      }).join("");
+
+      // GSAP Cards Entrance
+      if (!prefersReducedMotion && typeof gsap !== 'undefined') {
+        gsap.fromTo('.product-card',
+          { y: 80, opacity: 0 },
+          { y: 0, opacity: 1, duration: 1, stagger: 0.12, ease: 'power4.out', delay: 0.2 }
+        );
+      }
+    }
+
+    loadProducts();
+  </script>
+</body>
+</html>
